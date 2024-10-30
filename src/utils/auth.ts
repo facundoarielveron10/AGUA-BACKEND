@@ -27,7 +27,7 @@ export const hasPermissions = async (id: number, action: string) => {
         throw new Error("El Usuario no ha sido encontrado");
     }
 
-    const roleId = user.roleId;
+    const roleId = user.get("roleId");
     const role = await Role.findByPk(roleId);
 
     if (!role) {
@@ -36,7 +36,7 @@ export const hasPermissions = async (id: number, action: string) => {
 
     // Consultar las acciones asociadas al rol
     const roleActions = await RoleAction.findAll({
-        where: { roleId: role.id },
+        where: { roleId: role.get("id") },
         include: [
             {
                 model: Action,
@@ -48,7 +48,7 @@ export const hasPermissions = async (id: number, action: string) => {
     // Comprobar si el rol tiene la acción especificada
     const hasPermission = roleActions.some((roleAction) => {
         const actionInstance = roleAction.get("Action") as Action;
-        return actionInstance.name === action;
+        return actionInstance.get("name") === action;
     });
 
     return hasPermission;
