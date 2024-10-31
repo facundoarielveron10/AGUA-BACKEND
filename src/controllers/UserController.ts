@@ -23,7 +23,17 @@ export class UserController {
             // Busca el usuario por email
             const user = await User.findOne({
                 where: { email },
-                include: [Role],
+                include: [
+                    {
+                        model: Role,
+                        attributes: [
+                            "id",
+                            "name",
+                            "nameDescriptive",
+                            "description",
+                        ],
+                    },
+                ],
             });
 
             if (!user) {
@@ -87,7 +97,7 @@ export class UserController {
                     name: user.get("name"),
                     lastname: user.get("lastname"),
                     email: user.get("email"),
-                    role: user.get("role"),
+                    role: user.getDataValue("Role"),
                     actions: actions,
                 },
             });
