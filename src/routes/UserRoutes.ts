@@ -118,7 +118,6 @@ router.post(
         }
         return true;
     }),
-    body("role").notEmpty().withMessage("El Rol es Obligatorio"),
     handleInputErrors,
     UserController.editUser
 );

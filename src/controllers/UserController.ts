@@ -391,9 +391,13 @@ export class UserController {
         try {
             const id = req.user["id"];
 
-            const permissions = await hasPermissions(id, "EDIT_USER");
+            const hasEditUserPermission = await hasPermissions(id, "EDIT_USER");
+            const hasGetProfilePermission = await hasPermissions(
+                id,
+                "GET_PROFILE"
+            );
 
-            if (!permissions) {
+            if (!hasEditUserPermission && !hasGetProfilePermission) {
                 const error = new Error("El Usuario no tiene permisos");
                 return res.status(409).json({ errors: error.message });
             }
@@ -431,15 +435,17 @@ export class UserController {
                 });
             }
 
-            // Cambiar la búsqueda de rol a Sequelize
-            const roleUser = await Role.findOne({ where: { name: role } });
-            if (!roleUser) {
-                const error = new Error("El Rol no fue encontrado");
-                return res.status(404).json({ errors: error.message });
-            }
+            // Solo permitir cambiar el rol si tiene permiso de EDIT_USER
+            if (hasEditUserPermission) {
+                const roleUser = await Role.findOne({ where: { name: role } });
+                if (!roleUser) {
+                    const error = new Error("El Rol no fue encontrado");
+                    return res.status(404).json({ errors: error.message });
+                }
 
-            if (userEdit.get("roleId") !== roleUser.get("id")) {
-                userEdit.set("roleId", roleUser.get("id"));
+                if (userEdit.get("roleId") !== roleUser.get("id")) {
+                    userEdit.set("roleId", roleUser.get("id"));
+                }
             }
 
             await userEdit.save();
@@ -568,19 +574,27 @@ export class UserController {
             const id = req.user["id"];
             const { userId } = req.params;
 
-            const permissions = await hasPermissions(id, "GET_USERS");
+            const hasGetUsersPermission = await hasPermissions(id, "GET_USERS");
+            const hasGetProfilePermission = await hasPermissions(
+                id,
+                "GET_PROFILE"
+            );
 
-            if (!permissions) {
+            if (!hasGetUsersPermission && !hasGetProfilePermission) {
                 const error = new Error("El Usuario no tiene permisos");
                 return res.status(409).json({ errors: error.message });
             }
 
             const user = await User.findByPk(userId, {
-                attributes: { exclude: ["password", "createdAt", "updatedAt"] },
-                include: {
-                    model: Role,
-                    attributes: ["name"],
-                },
+                attributes: hasGetUsersPermission
+                    ? { exclude: ["password", "createdAt", "updatedAt"] }
+                    : ["name", "lastname", "email"],
+                include: hasGetUsersPermission
+                    ? {
+                          model: Role,
+                          attributes: ["name"],
+                      }
+                    : undefined,
             });
 
             if (!user) {
