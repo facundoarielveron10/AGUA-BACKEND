@@ -43,6 +43,10 @@ User.init(
                 key: "id",
             },
         },
+        active: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+        },
     },
     {
         sequelize,

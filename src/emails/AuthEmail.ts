@@ -18,7 +18,7 @@ export class AuthEmail {
                 <p>Visita el siguiente enlace: </p>
                 <a href="${process.env.APP_URL}/confirm">Confirmar Cuenta</a>
                 <p>Ingresa el siguiente codigo: <b>${user.token}</b></p>
-                <p>Este token espira en 10 minutos</p>`,
+                <p>Este token expira en 10 minutos</p>`,
             });
             console.log("Mensaje enviado", info.messageId);
         } catch (error) {
@@ -40,7 +40,7 @@ export class AuthEmail {
                 <p>Visita el siguiente enlace: </p>
                 <a href="${process.env.APP_URL}/new-password">Reestablecer contraseña</a>
                 <p>Ingresa el siguiente codigo: <b>${user.token}</b></p>
-                <p>Este token espira en 10 minutos</p>`,
+                <p>Este token expira en 10 minutos</p>`,
             });
 
             console.log("Mensaje enviado", info.messageId);

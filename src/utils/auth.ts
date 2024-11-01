@@ -69,7 +69,7 @@ export const roleAdmin = async () => {
 };
 
 // Función para decodificar y verificar el token JWT
-export const idUser = (token: string) => {
+export const userId = (token: string) => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new Error("No se ha configurado la clave secreta JWT");
