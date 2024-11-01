@@ -46,7 +46,7 @@ router.post(
     authenticate,
     body("idRole").notEmpty().withMessage("El ID del Rol es Obligatorio"),
     handleInputErrors,
-    RoleActionController.activeRole
+    RoleActionController.activateRole
 );
 // ---- POST ---- //
 

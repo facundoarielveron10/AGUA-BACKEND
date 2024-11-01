@@ -257,12 +257,12 @@ export class RoleActionController {
         }
     };
 
-    static activeRole = async (req: CustomRequest, res: Response) => {
+    static activateRole = async (req: CustomRequest, res: Response) => {
         try {
             const id = req.user["id"];
             const { idRole } = req.body;
 
-            const permissions = await hasPermissions(id, "ACTIVE_ROLE");
+            const permissions = await hasPermissions(id, "ACTIVATE_ROLE");
             if (!permissions) {
                 const error = new Error("El Usuario no tiene permisos");
                 return res.status(409).json({ errors: error.message });
