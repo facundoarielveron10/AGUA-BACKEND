@@ -17,7 +17,6 @@ router.post(
     handleInputErrors,
     DirectionsController.createAddress
 );
-// ---- POST ---- //
 
 router.post(
     "/edit-address",

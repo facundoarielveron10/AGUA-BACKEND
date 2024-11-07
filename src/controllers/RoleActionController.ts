@@ -229,10 +229,11 @@ export class RoleActionController {
 
             if (
                 role.get("name") === "ROLE_ADMIN" ||
-                role.get("name") === "ROLE_USER"
+                role.get("name") === "ROLE_USER" ||
+                role.get("name") === "ROLE_DELIVERY"
             ) {
                 const error = new Error(
-                    "No puedes eliminar el rol de Usuarios o el de Administrador"
+                    "No puedes eliminar el rol de Usuarios, Administrador o Repartidor"
                 );
                 return res.status(400).json({ errors: error.message });
             }
