@@ -33,11 +33,29 @@ router.post(
     handleInputErrors,
     OrdersController.confirmOrder
 );
+
+router.post(
+    "/assing-delivery",
+    authenticate,
+    body("orderId").notEmpty().withMessage("La Orden es Obligatoria"),
+    body("deliveryId").notEmpty().withMessage("El Repartidor es Obligatorio"),
+    handleInputErrors,
+    OrdersController.assingDelivery
+);
 // ---- POST ---- //
 
 // ---- GET ---- //
 router.get("/orders", authenticate, OrdersController.getAllOrders);
-router.get("/orders/:userId", authenticate, OrdersController.getOrdersByUser);
+router.get(
+    "/orders/orders-user/:userId",
+    authenticate,
+    OrdersController.getOrdersByUser
+);
+router.get(
+    "/orders/orders-delivery/:deliveryId",
+    authenticate,
+    OrdersController.getOrdersByDelivery
+);
 router.get("/deliveries", authenticate, OrdersController.getAllDeliveries);
 // ---- GET ---- //
 

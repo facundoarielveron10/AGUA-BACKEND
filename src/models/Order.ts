@@ -2,6 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../config/database";
 import { Address } from "./Address";
 import { User } from "./User";
+
 export class Order extends Model {
     public id!: number;
     public amount!: number;
@@ -9,6 +10,7 @@ export class Order extends Model {
     public status!: string;
     public addressId!: number;
     public userId!: number;
+    public deliveryId!: number;
 }
 
 Order.init(
@@ -39,6 +41,13 @@ Order.init(
                 key: "id",
             },
         },
+        deliveryId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: User,
+                key: "id",
+            },
+        },
     },
     {
         sequelize,
@@ -47,4 +56,5 @@ Order.init(
 );
 
 Order.belongsTo(Address, { foreignKey: "addressId" });
-Order.belongsTo(User, { foreignKey: "userId" });
+Order.belongsTo(User, { as: "User", foreignKey: "userId" });
+Order.belongsTo(User, { as: "Delivery", foreignKey: "deliveryId" });
