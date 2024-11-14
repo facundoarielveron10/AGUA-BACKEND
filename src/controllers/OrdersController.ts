@@ -6,6 +6,7 @@ import { User } from "../models/User";
 import { Order } from "../models/Order";
 import { Role } from "../models/Role";
 import { Op } from "sequelize";
+import axios from "axios";
 
 export class OrdersController {
     static createOrder = async (req: CustomRequest, res: Response) => {
@@ -285,7 +286,13 @@ export class OrdersController {
                     include: [
                         {
                             model: Address,
-                            attributes: ["address", "city", "country"],
+                            attributes: [
+                                "id",
+                                "address",
+                                "city",
+                                "country",
+                                "coordinates",
+                            ],
                         },
                     ],
                     offset: offset,
@@ -384,6 +391,47 @@ export class OrdersController {
             res.send(deliveries);
         } catch (error) {
             console.log(error);
+            res.status(500).json({ errors: "Hubo un error" });
+        }
+    };
+
+    static generateRoute = async (req: CustomRequest, res: Response) => {
+        try {
+            const id = req.user["id"];
+            const permissions = await hasPermissions(id, "GENERATE_ROUTE");
+            if (!permissions) {
+                const error = new Error("El Usuario no tiene permisos");
+                return res.status(409).json({ errors: error.message });
+            }
+
+            const { orders } = req.body;
+
+            const apiKeyORS =
+                "5b3ce3597851110001cf6248c077885edb3449d5b509fbdf94ba203e";
+
+            const coordinatesData = await orders.map((order) => {
+                return order.coordinates.map((coord) =>
+                    parseFloat(parseFloat(coord).toFixed(7))
+                );
+            });
+
+            const { data } = await axios.post(
+                "https://api.openrouteservice.org/v2/directions/driving-car/json",
+                {
+                    coordinates: coordinatesData,
+                },
+                {
+                    headers: {
+                        Accept: "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
+                        Authorization: apiKeyORS,
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                }
+            );
+
+            res.send(data);
+        } catch (error) {
+            console.log(error.response.data);
             res.status(500).json({ errors: "Hubo un error" });
         }
     };

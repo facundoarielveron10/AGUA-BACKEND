@@ -42,6 +42,14 @@ router.post(
     handleInputErrors,
     OrdersController.assingDelivery
 );
+
+router.post(
+    "/generate-route",
+    authenticate,
+    body("orders").notEmpty().withMessage("Las Ordenes son Obligatorias"),
+    handleInputErrors,
+    OrdersController.generateRoute
+);
 // ---- POST ---- //
 
 // ---- GET ---- //

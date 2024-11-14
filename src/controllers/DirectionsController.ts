@@ -3,6 +3,7 @@ import { Address } from "../models/Address";
 import { CustomRequest } from "../middleware/authenticate";
 import { hasPermissions } from "../utils/auth";
 import { User } from "../models/User";
+import axios from "axios";
 
 export class DirectionsController {
     static createAddress = async (req: CustomRequest, res: Response) => {
@@ -26,7 +27,39 @@ export class DirectionsController {
                 return res.status(409).json({ errors: error.message });
             }
 
-            const newAddress = new Address({ address, city, country, userId });
+            const getCoordinates = async (address: string) => {
+                const { data } = await axios.get(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                        address
+                    )}`,
+                    {
+                        headers: {
+                            "User-Agent":
+                                "CooperativaObrein/1.0 facundoarielveron5@gmail.com",
+                        },
+                    }
+                );
+
+                if (data && data.length > 0) {
+                    const { lon, lat } = data[0];
+                    return [parseFloat(lon), parseFloat(lat)];
+                }
+            };
+            const addressData = `${address}, ${city}, ${country}`;
+            const coordinates = await getCoordinates(addressData);
+
+            if (!coordinates || coordinates.length <= 0) {
+                const error = new Error("Las direcciones no son validas");
+                return res.status(409).json({ errors: error.message });
+            }
+
+            const newAddress = new Address({
+                address,
+                city,
+                country,
+                coordinates,
+                userId,
+            });
             await newAddress.save();
 
             res.send({

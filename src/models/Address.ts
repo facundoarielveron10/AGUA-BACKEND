@@ -7,6 +7,7 @@ export class Address extends Model {
     public address!: string;
     public province!: string;
     public country!: string;
+    public coordinates!: Array<String>;
     public userId!: number;
 }
 
@@ -22,6 +23,10 @@ Address.init(
         },
         country: {
             type: DataTypes.STRING,
+            allowNull: false,
+        },
+        coordinates: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
             allowNull: false,
         },
         userId: {
