@@ -8,6 +8,7 @@ export class Address extends Model {
     public province!: string;
     public country!: string;
     public coordinates!: Array<String>;
+    public delivery!: boolean;
     public userId!: number;
 }
 
@@ -28,6 +29,10 @@ Address.init(
         coordinates: {
             type: DataTypes.ARRAY(DataTypes.STRING),
             allowNull: false,
+        },
+        delivery: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
         },
         userId: {
             type: DataTypes.INTEGER,

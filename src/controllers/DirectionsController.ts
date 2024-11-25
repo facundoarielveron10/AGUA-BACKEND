@@ -10,13 +10,15 @@ export class DirectionsController {
         try {
             const id = req.user["id"];
 
-            const permissions = await hasPermissions(id, "CREATE_ADDRESS");
+            const permissions =
+                (await hasPermissions(id, "CREATE_ADDRESS")) ||
+                (await hasPermissions(id, "CREATE_ADDRESS_DELIVERY"));
             if (!permissions) {
                 const error = new Error("El Usuario no tiene permisos");
                 return res.status(409).json({ errors: error.message });
             }
 
-            const { address, city, country, userId } = req.body;
+            const { address, city, country, userId, delivery } = req.body;
 
             const addressExists = await Address.findAll({
                 where: { userId },
@@ -58,6 +60,7 @@ export class DirectionsController {
                 city,
                 country,
                 coordinates,
+                delivery: delivery ? true : false,
                 userId,
             });
             await newAddress.save();
@@ -75,7 +78,9 @@ export class DirectionsController {
         try {
             const id = req.user["id"];
 
-            const permissions = await hasPermissions(id, "EDIT_ADDRESS");
+            const permissions =
+                (await hasPermissions(id, "EDIT_ADDRESS")) ||
+                (await hasPermissions(id, "EDIT_ADDRESS_DELIVERY"));
             if (!permissions) {
                 const error = new Error("El Usuario no tiene permisos");
                 return res.status(409).json({ errors: error.message });
@@ -89,7 +94,38 @@ export class DirectionsController {
                 return res.status(409).json({ errors: error.message });
             }
 
-            await updatedAddress.update({ address, city, country });
+            const getCoordinates = async (address: string) => {
+                const { data } = await axios.get(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                        address
+                    )}`,
+                    {
+                        headers: {
+                            "User-Agent":
+                                "CooperativaObrein/1.0 facundoarielveron5@gmail.com",
+                        },
+                    }
+                );
+
+                if (data && data.length > 0) {
+                    const { lon, lat } = data[0];
+                    return [parseFloat(lon), parseFloat(lat)];
+                }
+            };
+            const addressData = `${address}, ${city}, ${country}`;
+            const coordinates = await getCoordinates(addressData);
+
+            if (!coordinates || coordinates.length <= 0) {
+                const error = new Error("Las direcciones no son validas");
+                return res.status(409).json({ errors: error.message });
+            }
+
+            await updatedAddress.update({
+                address,
+                city,
+                country,
+                coordinates,
+            });
 
             res.send({
                 message: "Dirección Actualizada Correctamente",
@@ -104,7 +140,9 @@ export class DirectionsController {
         try {
             const id = req.user["id"];
 
-            const permissions = await hasPermissions(id, "EDIT_ADDRESS");
+            const permissions =
+                (await hasPermissions(id, "DELETE_ADDRESS")) ||
+                (await hasPermissions(id, "DELETE_ADDRESS_DELIVERY"));
             if (!permissions) {
                 const error = new Error("El Usuario no tiene permisos");
                 return res.status(409).json({ errors: error.message });
@@ -146,6 +184,59 @@ export class DirectionsController {
 
             const address = await Address.findAll({
                 where: { userId },
+                attributes: ["id", "address", "city", "country"],
+            });
+
+            res.send(address);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ errors: "Hubo un error" });
+        }
+    };
+
+    static getAddressDelivery = async (req: CustomRequest, res: Response) => {
+        try {
+            const id = req.user["id"];
+
+            const permissions = await hasPermissions(
+                id,
+                "GET_ADDRESS_DELIVERY"
+            );
+            if (!permissions) {
+                const error = new Error("El Usuario no tiene permisos");
+                return res.status(409).json({ errors: error.message });
+            }
+
+            const address = await Address.findAll({
+                where: {
+                    delivery: true,
+                },
+                attributes: ["id", "address", "city", "country"],
+            });
+
+            res.send(address);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ errors: "Hubo un error" });
+        }
+    };
+
+    static getAddressById = async (req: CustomRequest, res: Response) => {
+        try {
+            const id = req.user["id"];
+
+            const permissions = await hasPermissions(
+                id,
+                "GET_ADDRESS_DELIVERY"
+            );
+            if (!permissions) {
+                const error = new Error("El Usuario no tiene permisos");
+                return res.status(409).json({ errors: error.message });
+            }
+
+            const { addressId } = req.params;
+
+            const address = await Address.findByPk(addressId, {
                 attributes: ["id", "address", "city", "country"],
             });
 

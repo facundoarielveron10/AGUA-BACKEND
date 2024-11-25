@@ -44,6 +44,16 @@ router.post(
 
 // ---- GET ---- //
 router.get("/address/:userId", authenticate, DirectionsController.getAddress);
+router.get(
+    "/address-delivery",
+    authenticate,
+    DirectionsController.getAddressDelivery
+);
+router.get(
+    "/address-id/:addressId",
+    authenticate,
+    DirectionsController.getAddressById
+);
 // ---- GET ---- //
 
 export default router;
