@@ -47,6 +47,9 @@ router.post(
     "/generate-route",
     authenticate,
     body("orders").notEmpty().withMessage("Las Ordenes son Obligatorias"),
+    body("addressStart")
+        .notEmpty()
+        .withMessage("La Direccion de Partida es Obligatoria"),
     handleInputErrors,
     OrdersController.generateRoute
 );

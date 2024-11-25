@@ -404,10 +404,24 @@ export class OrdersController {
                 return res.status(409).json({ errors: error.message });
             }
 
-            const { orders } = req.body;
+            const { orders, addressStart } = req.body;
+
+            const address = await Address.findByPk(addressStart);
+            if (!address) {
+                const error = new Error(
+                    "La Direccion de Partida no fue encontrada"
+                );
+                return res.status(404).json({ errors: error.message });
+            }
 
             const apiKeyORS =
                 "5b3ce3597851110001cf6248c077885edb3449d5b509fbdf94ba203e";
+
+            // Obtener las coordenadas de la dirección de partida
+            const startCoordinates = [
+                parseFloat(String(address.get("coordinates")[0])).toFixed(7),
+                parseFloat(String(address.get("coordinates")[1])).toFixed(7),
+            ];
 
             const coordinatesData = await orders.map((order) => {
                 return order.coordinates.map((coord) =>
@@ -415,10 +429,13 @@ export class OrdersController {
                 );
             });
 
+            // Incluir las coordenadas de la dirección de partida al inicio
+            const allCoordinates = [startCoordinates, ...coordinatesData];
+
             const { data } = await axios.post(
                 "https://api.openrouteservice.org/v2/directions/driving-car/json",
                 {
-                    coordinates: coordinatesData,
+                    coordinates: allCoordinates,
                 },
                 {
                     headers: {
@@ -429,7 +446,11 @@ export class OrdersController {
                 }
             );
 
-            res.send(data);
+            res.send({
+                ...data,
+                startLat: startCoordinates[0],
+                startLon: startCoordinates[1],
+            });
         } catch (error) {
             console.log(error.response.data);
             res.status(500).json({ errors: "Hubo un error" });
