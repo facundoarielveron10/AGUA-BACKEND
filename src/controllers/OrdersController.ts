@@ -7,6 +7,7 @@ import { Order } from "../models/Order";
 import { Role } from "../models/Role";
 import { Op } from "sequelize";
 import axios from "axios";
+import { AuthEmail } from "../emails/AuthEmail";
 
 export class OrdersController {
     static createOrder = async (req: CustomRequest, res: Response) => {
@@ -452,7 +453,54 @@ export class OrdersController {
                 startLon: startCoordinates[1],
             });
         } catch (error) {
-            console.log(error.response.data);
+            res.status(500).json({ errors: "Hubo un error" });
+        }
+    };
+
+    static changeStates = async (req: CustomRequest, res: Response) => {
+        try {
+            const id = req.user["id"];
+            const permissions = await hasPermissions(id, "CHANGE_STATES");
+            if (!permissions) {
+                const error = new Error("El Usuario no tiene permisos");
+                return res.status(409).json({ errors: error.message });
+            }
+
+            const { states } = req.body;
+            const ordersPromises = states.map(async (state: any) => {
+                const order = await Order.findByPk(state?.id);
+                const user = await User.findByPk(order.get("userId"));
+                const address = await Address.findByPk(order.get("addressId"));
+                const userData = {
+                    name: user.get("name"),
+                    email: user.get("email"),
+                };
+                const orderData = {
+                    quantity: order.get("amount"),
+                    address: address.get("address"),
+                };
+                if (!order) {
+                    const error = new Error(
+                        "Uno de los pedidos no fue encontrado"
+                    );
+                    return res.status(404).json({ errors: error.message });
+                } else {
+                    if (state.status === "DELIVERED") {
+                        AuthEmail.sendOrderDelivered(userData, orderData);
+                    }
+                    order.set("status", state.status);
+                    await order.save();
+                    return order;
+                }
+            });
+
+            const orders = await Promise.all(ordersPromises);
+
+            res.send({
+                message: "Estados actualizados correctamente",
+                orders: orders,
+            });
+        } catch (error) {
             res.status(500).json({ errors: "Hubo un error" });
         }
     };

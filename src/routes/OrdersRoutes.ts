@@ -53,6 +53,17 @@ router.post(
     handleInputErrors,
     OrdersController.generateRoute
 );
+
+router.post(
+    "/change-states",
+    authenticate,
+    body("states")
+        .notEmpty()
+        .isArray()
+        .withMessage("Los Estados son Obligatorias"),
+    handleInputErrors,
+    OrdersController.changeStates
+);
 // ---- POST ---- //
 
 // ---- GET ---- //

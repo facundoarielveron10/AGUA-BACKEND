@@ -6,6 +6,16 @@ interface EmailType {
     token: string;
 }
 
+interface UserType {
+    name: string;
+    email: string;
+}
+
+interface OrderType {
+    quantity: number;
+    address: string;
+}
+
 export class AuthEmail {
     static sendConfirmationEmail = async (user: EmailType) => {
         try {
@@ -47,6 +57,24 @@ export class AuthEmail {
         } catch (error) {
             console.log(
                 "Hubo un problema al enviar el email de restablecer contraseña: ",
+                error
+            );
+        }
+    };
+
+    static sendOrderDelivered = async (user: UserType, order: OrderType) => {
+        try {
+            const info = await transporter.sendMail({
+                from: "SSAA2 <admin@gmail.com>",
+                to: user.email,
+                subject: "SSAA2 - Orden Entregada",
+                text: "SSAA2 - Tu Orden fue entregada",
+                html: `<p>Hola: ${user.name}, tu orden de ${order.quantity} bidones para la direccion ${order.address} ha sido entregada</p>`,
+            });
+            console.log("Mensaje enviado", info.messageId);
+        } catch (error) {
+            console.log(
+                "Hubo un problema al enviar el email de entrega de bidones: ",
                 error
             );
         }
